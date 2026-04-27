@@ -1,6 +1,15 @@
-# app_dashboard_fixed.py
-# Dashboard Interaktif E-Commerce Brazil Analysis - FIXED VERSION
-# Berdasarkan hasil analisis dari Proyek_Analisis_Data_FIRDHANIA_NUR_RIZKY_S (1).ipynb
+# ============================================
+# DASHBOARD E-COMMERCE BRAZIL ANALYSIS
+# DENGAN FITUR FILTER TANGGAL - VERSI KOREKSI
+# ============================================
+# Nama: Firdhania Nur Rizky Setyarini
+# Email: firdhania.setyarini@mhs.unsoed.ac.id
+# ID Dicoding: firdhanianurrizky
+# ============================================
+
+# ============================================
+# 1. IMPORT PACKAGES
+# ============================================
 
 import streamlit as st
 import pandas as pd
@@ -8,13 +17,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-from datetime import datetime
+from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
 # ============================================
-# KONFIGURASI HALAMAN
+# 2. KONFIGURASI HALAMAN
 # ============================================
+
 st.set_page_config(
     page_title="E-Commerce Brazil Dashboard",
     page_icon="📊",
@@ -23,217 +33,214 @@ st.set_page_config(
 )
 
 # ============================================
-# WARNA UTAMA (Sesuai permintaan - #1E88E5)
+# 3. CSS KUSTOM
 # ============================================
-PRIMARY_COLOR = "#1E88E5"
-SECONDARY_COLOR = "#1565C0"
-LIGHT_BLUE = "#64B5F6"
-DARK_BLUE = "#0D47A1"
-WARNING_COLOR = "#FF6B6B"
-SUCCESS_COLOR = "#4CAF50"
-BACKGROUND_GRAY = "#F5F5F5"
 
-# ============================================
-# CSS KUSTOM
-# ============================================
-st.markdown(f"""
+st.markdown("""
 <style>
-    .main-title {{
+    .main-title {
         font-size: 2rem;
         font-weight: bold;
-        color: {PRIMARY_COLOR};
+        color: #1E88E5;
         text-align: center;
         margin-bottom: 0.5rem;
-    }}
-    .subtitle {{
+    }
+    .subtitle {
         font-size: 1rem;
         color: #666;
         text-align: center;
         margin-bottom: 2rem;
-    }}
-    .metric-card {{
-        background: linear-gradient(135deg, {PRIMARY_COLOR}, {DARK_BLUE});
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 15px;
         padding: 1rem;
         color: white;
         text-align: center;
-    }}
-    .metric-card-green {{
-        background: linear-gradient(135deg, #2E7D32, #4CAF50);
-    }}
-    .metric-card-orange {{
-        background: linear-gradient(135deg, #E65100, #FF9800);
-    }}
-    .metric-card-red {{
-        background: linear-gradient(135deg, #C62828, #EF5350);
-    }}
-    .metric-value {{
+    }
+    .metric-card-blue {
+        background: linear-gradient(135deg, #1E88E5 0%, #42A5F5 100%);
+    }
+    .metric-card-green {
+        background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+    }
+    .metric-card-orange {
+        background: linear-gradient(135deg, #E65100 0%, #FF9800 100%);
+    }
+    .metric-card-red {
+        background: linear-gradient(135deg, #C62828 0%, #EF5350 100%);
+    }
+    .metric-card-purple {
+        background: linear-gradient(135deg, #6A1B9A 0%, #AB47BC 100%);
+    }
+    .metric-value {
         font-size: 1.8rem;
         font-weight: bold;
-    }}
-    .metric-label {{
+    }
+    .metric-label {
         font-size: 0.85rem;
         opacity: 0.9;
-    }}
-    .insight-box {{
+    }
+    .insight-box {
         background-color: #e8f0fe;
-        border-left: 5px solid {PRIMARY_COLOR};
+        border-left: 5px solid #1E88E5;
         padding: 1rem;
         border-radius: 10px;
         margin: 1rem 0;
-    }}
-    .insight-title {{
+    }
+    .insight-title {
         font-weight: bold;
-        color: {PRIMARY_COLOR};
+        color: #1E88E5;
         margin-bottom: 0.5rem;
-    }}
-    .warning-box {{
+    }
+    .warning-box {
         background-color: #fff3e0;
         border-left: 5px solid #FF9800;
         padding: 1rem;
         border-radius: 10px;
         margin: 1rem 0;
-    }}
-    .success-box {{
+    }
+    .success-box {
         background-color: #e8f5e9;
         border-left: 5px solid #4CAF50;
         padding: 1rem;
         border-radius: 10px;
         margin: 1rem 0;
-    }}
-    .data-table {{
-        font-size: 0.85rem;
-        border-collapse: collapse;
-        width: 100%;
-    }}
-    .data-table th {{
-        background-color: {PRIMARY_COLOR};
-        color: white;
-        padding: 8px;
-        text-align: left;
-    }}
-    .data-table td {{
-        border: 1px solid #ddd;
-        padding: 6px;
-    }}
-    .data-table tr:nth-child(even) {{
-        background-color: #f2f2f2;
-    }}
-    footer {{
+    }
+    footer {
         text-align: center;
         color: #888;
         font-size: 0.8rem;
         margin-top: 2rem;
         padding: 1rem;
         border-top: 1px solid #eee;
-    }}
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================
-# LOAD DATA DARI HASIL ANALISIS (AGREGASI)
+# 4. DATA HASIL AGREGASI DARI NOTEBOOK
 # ============================================
+
 @st.cache_data
-def load_aggregated_data():
-    """Memuat data agregasi dari hasil analisis Notebook"""
+def get_aggregated_results():
+    """
+    Data hasil agregasi dari notebook
+    Berdasarkan perhitungan yang sudah dilakukan
+    """
     
-    # Data rating per status pengiriman (HASIL DARI NOTEBOOK)
-    rating_data = pd.DataFrame({
+    # Data rating per status pengiriman (Agregasi 1B dari notebook)
+    delivery_rating_data = {
         'delivery_status': ['Lebih Cepat', 'Tepat Waktu', 'Terlambat'],
         'mean_rating': [4.22, 4.22, 4.09],
         'count': [17981, 72, 17468],
-        'std': [1.23, 1.13, 1.34],
-        'sem': [0.009, 0.133, 0.010]
-    })
+        'std': [1.23, 1.13, 1.34]
+    }
     
-    # Data rentang keterlambatan (HASIL DARI NOTEBOOK)
-    delay_data = pd.DataFrame({
+    # Data distribusi rating (Agregasi 1A dari notebook)
+    review_distribution = {
+        'review_score': [1, 2, 3, 4, 5],
+        'count': [11127, 3071, 8001, 18729, 56172],
+        'percentage': [11.5, 3.2, 8.2, 19.3, 57.8]
+    }
+    
+    # Data rentang keterlambatan (Agregasi 1C dari notebook)
+    delay_rating_data = {
         'delay_range': ['1-3 hari', '4-7 hari', '> 7 hari'],
         'mean_rating': [3.81, 3.52, 4.09],
-        'count': [137, 125, 17206],
-        'std': [1.25, 1.28, 1.34]
-    })
+        'count': [137, 125, 17206]
+    }
     
-    # Data distribusi rating (HASIL DARI NOTEBOOK)
-    rating_dist = pd.DataFrame({
-        'review_score': [1, 2, 3, 4, 5],
-        'percentage': [11.5, 3.2, 8.2, 19.3, 57.8],
-        'count': [11127, 3071, 8001, 18729, 56172]
-    })
+    # Data distribusi status pengiriman
+    delivery_status_dist = {
+        'delivery_status': ['Lebih Cepat', 'Tepat Waktu', 'Terlambat'],
+        'count': [17981, 72, 17468],
+        'percentage': [50.6, 0.2, 49.2]
+    }
     
-    # Data performa seller per kota (HASIL DARI NOTEBOOK)
-    city_data = pd.DataFrame({
-        'seller_city': ['Sao Paulo', 'Ibitinga', 'Curitiba', 'Santo Andre', 'Sao Jose do Rio Preto',
-                        'Belo Horizonte', 'Rio de Janeiro', 'Guarulhos', 'Ribeirao Preto', 'Maringa',
-                        'Itaquaquecetuba', 'Piracicaba', 'Petropolis', 'Salto', 'Jacarei',
-                        'Praia Grande', 'Sumare', 'Penapolis', 'Pedreira'],
-        'seller_state': ['SP', 'SP', 'PR', 'SP', 'SP', 'MG', 'RJ', 'SP', 'SP', 'PR',
-                         'SP', 'SP', 'RJ', 'SP', 'SP', 'SP', 'SP', 'SP', 'SP'],
-        'total_sellers': [694, 49, 127, 45, 0, 68, 96, 50, 52, 40, 9, 12, 6, 9, 7, 10, 5, 5, 3],
-        'total_products_sold': [27357, 7621, 2955, 2886, 2544, 2522, 2356, 2309, 2208, 2194,
-                                1844, 2272, 983, 1326, 934, 1310, 599, 441, 260],
-        'productivity': [39.4, 155.5, 23.3, 64.1, 0, 37.1, 24.5, 46.2, 42.5, 54.9,
-                         204.9, 189.3, 163.8, 147.3, 133.4, 131.0, 119.8, 88.2, 86.5]
-    })
+    # Data kota (Agregasi 2A, 2B, 2C dari notebook)
+    city_performance_data = {
+        'seller_city': [
+            'sao paulo', 'curitiba', 'rio de janeiro', 'belo horizonte', 
+            'ribeirao preto', 'guarulhos', 'ibitinga', 'santo andre', 
+            'campinas', 'maringa', 'sao jose do rio preto', 'itaquaquecetuba',
+            'piracicaba', 'petropolis', 'salto', 'jacarei', 'praia grande',
+            'sumare', 'penapolis', 'pedreira'
+        ],
+        'seller_state': [
+            'SP', 'PR', 'RJ', 'MG', 'SP', 'SP', 'SP', 'SP', 
+            'SP', 'PR', 'SP', 'SP', 'SP', 'RJ', 'SP', 'SP', 'SP', 'SP', 'SP', 'SP'
+        ],
+        'total_sellers': [
+            694, 127, 96, 68, 52, 50, 49, 45, 41, 40, 0, 9, 12, 6, 9, 7, 10, 5, 5, 3
+        ],
+        'total_products_sold': [
+            27357, 2955, 2356, 2522, 2208, 2309, 7621, 2886, 0, 2194, 2544, 
+            1844, 2272, 983, 1326, 934, 1310, 599, 441, 260
+        ],
+        'avg_products_per_seller': [
+            39.4, 23.3, 24.5, 37.1, 42.5, 46.2, 155.5, 64.1, 
+            0, 54.9, 0, 204.9, 189.3, 163.8, 147.3, 133.4, 131.0, 119.8, 88.2, 86.5
+        ]
+    }
     
-    # Data per negara bagian (HASIL DARI NOTEBOOK)
-    state_data = pd.DataFrame({
+    # Data state performance
+    state_performance_data = {
         'seller_state': ['SP', 'PR', 'RJ', 'MG'],
         'total_sellers': [991, 167, 102, 68],
-        'total_products': [52139, 5149, 3339, 2522]
-    })
+        'total_products_sold': [52139, 5149, 3339, 2522]
+    }
     
-    # Distribusi rating per status (simulasi berdasarkan pola)
-    rating_by_status = pd.DataFrame({
-        'delivery_status': ['Lebih Cepat']*5 + ['Tepat Waktu']*5 + ['Terlambat']*5,
-        'rating': [1, 2, 3, 4, 5] * 3,
-        'percentage': [8.5, 2.0, 6.5, 18.5, 64.5,  # Lebih Cepat
-                       8.5, 2.0, 6.5, 18.5, 64.5,  # Tepat Waktu
-                       14.5, 4.5, 10.0, 20.0, 51.0]  # Terlambat
-    })
+    # Korelasi (Agregasi 2D dari notebook)
+    correlation_result = {
+        'pearson_r': 0.967,
+        'p_value': 0.0000,
+        'spearman_r': 0.8288,
+        'spearman_p': 0.000012
+    }
     
-    return rating_data, delay_data, rating_dist, city_data, state_data, rating_by_status
-
-# Load data agregasi
-rating_data, delay_data, rating_dist, city_data, state_data, rating_by_status = load_aggregated_data()
-
-# Hitung korelasi dari data asli
-city_corr_clean = city_data[city_data['total_sellers'] >= 3].copy()
-city_corr_clean = city_corr_clean[city_corr_clean['total_products_sold'] > 0]
-
-if len(city_corr_clean) >= 3:
-    correlation = city_corr_clean['total_sellers'].corr(city_corr_clean['total_products_sold'])
-    spearman_corr = city_corr_clean['total_sellers'].corr(city_corr_clean['total_products_sold'], method='spearman')
-    p_value = 0.0000  # signifikan
-else:
-    correlation = 0.967
-    spearman_corr = 0.8288
-    p_value = 0.0000
+    # Uji statistik (dari notebook)
+    ttest_result = {
+        't_statistic': 13.5777,
+        'p_value': 0.000000
+    }
+    
+    anova_result = {
+        'f_statistic': 92.5340,
+        'p_value': 0.000000
+    }
+    
+    return {
+        'delivery_rating': pd.DataFrame(delivery_rating_data),
+        'review_distribution': pd.DataFrame(review_distribution),
+        'delay_rating': pd.DataFrame(delay_rating_data),
+        'delivery_status_dist': pd.DataFrame(delivery_status_dist),
+        'city_performance': pd.DataFrame(city_performance_data),
+        'state_performance': pd.DataFrame(state_performance_data),
+        'correlation': correlation_result,
+        'ttest': ttest_result,
+        'anova': anova_result
+    }
 
 # ============================================
-# SIDEBAR - FILTERS & NAVIGATION
+# 5. LOAD DATA HASIL AGREGASI
 # ============================================
-st.sidebar.markdown(f"""
-<div style='background-color: {PRIMARY_COLOR}; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px;'>
-    <h3 style='color: white; margin: 0;'>📊 E-Commerce Dashboard</h3>
-</div>
-""", unsafe_allow_html=True)
 
-st.sidebar.markdown("Analisis Data Brazil E-Commerce 2016-2018")
+with st.spinner("📂 Memuat hasil analisis..."):
+    results = get_aggregated_results()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("## 🎛️ Filter Data")
+st.success("✅ Data hasil analisis berhasil dimuat!")
 
-# Filter tanggal (simulasi, karena data sudah agregat)
-col1, col2 = st.sidebar.columns(2)
-with col1:
-    start_date = st.date_input("📅 Dari", datetime(2016, 1, 1), 
-                               min_value=datetime(2016, 1, 1), 
-                               max_value=datetime(2018, 12, 31))
-with col2:
-    end_date = st.date_input("📅 Sampai", datetime(2018, 12, 31), 
-                             min_value=datetime(2016, 1, 1), 
-                             max_value=datetime(2018, 12, 31))
+# Filter data kota yang valid (total_sellers > 0)
+city_data_clean = results['city_performance'][results['city_performance']['total_sellers'] > 0].copy()
+
+# ============================================
+# 6. SIDEBAR - NAVIGATION
+# ============================================
+
+st.sidebar.markdown("# 📊 E-Commerce Dashboard")
+st.sidebar.markdown("Analisis Data Brazil E-Commerce")
+st.sidebar.markdown("**Oleh:** Firdhania Nur Rizky Setyarini")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("## 📌 Pilih Analisis")
@@ -243,40 +250,42 @@ analysis_type = st.sidebar.radio(
     "Pilih Menu Analisis:",
     [
         "🏠 Overview Dashboard",
-        "📦 Pertanyaan 1: Analisis Pengiriman",
+        "📦 Pertanyaan 1: Pengaruh Waktu Pengiriman",
         "⭐ Pertanyaan 1: Detail Rating",
-        "📍 Pertanyaan 2: Analisis Seller",
-        "🏙️ Pertanyaan 2: Analisis Lokasi",
+        "📍 Pertanyaan 2: Analisis Seller & Lokasi",
         "📈 Kesimpulan & Rekomendasi"
     ]
 )
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ℹ️ Tentang Dashboard")
-st.sidebar.markdown(f"""
+st.sidebar.markdown("""
 **Data Source:** Olist Brazilian E-Commerce Dataset
 
-**Periode:** 2016 - 2018
+**Periode Analisis:** 2016 - 2018
 
 **Analisis Menjawab:**
-1. Hubungan waktu pengiriman dengan kepuasan pelanggan
-2. Hubungan lokasi seller dengan volume penjualan
-
-**Warna Utama:** {PRIMARY_COLOR}
+1. Bagaimana perbedaan rating berdasarkan status pengiriman?
+2. Apakah ada hubungan antara jumlah seller dengan total produk terjual per kota/state?
 """)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"**Periode Filter:** {start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}")
+st.sidebar.markdown("**📊 Statistik Data:**")
+st.sidebar.markdown(f"- Total Orders: 99,441")
+st.sidebar.markdown(f"- Total Produk Terjual: 112,650")
+st.sidebar.markdown(f"- Total Seller Unik: 3,095")
 
 # ============================================
-# MAIN CONTENT
+# 7. MAIN CONTENT - HEADER
 # ============================================
-st.markdown(f'<div class="main-title">📊 E-Commerce Brazil Analytics Dashboard</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="subtitle">Analisis Pengiriman & Performa Seller | Periode 2016-2018</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="main-title">📊 E-Commerce Brazil Analytics Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Analisis Pengiriman & Performa Seller | Periode 2016-2018</div>', unsafe_allow_html=True)
 
 # ============================================
-# MENU 1: OVERVIEW DASHBOARD
+# 8. MENU 1: OVERVIEW DASHBOARD
 # ============================================
+
 if analysis_type == "🏠 Overview Dashboard":
     st.markdown("## 📈 Ringkasan Data Keseluruhan")
     
@@ -284,77 +293,75 @@ if analysis_type == "🏠 Overview Dashboard":
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_orders = rating_data['count'].sum()
         st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">{total_orders:,}</div>
-            <div class="metric-label">Total Orders (Delivered)</div>
+        <div class="metric-card metric-card-blue">
+            <div class="metric-value">99,441</div>
+            <div class="metric-label">Total Orders</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        total_products = city_data['total_products_sold'].sum()
+        total_reviews = results['review_distribution']['count'].sum()
         st.markdown(f"""
         <div class="metric-card metric-card-green">
-            <div class="metric-value">{total_products:,}</div>
-            <div class="metric-label">Total Produk Terjual</div>
+            <div class="metric-value">{total_reviews:,}</div>
+            <div class="metric-label">Total Review</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        unique_sellers = city_data['total_sellers'].sum()
+        total_sellers = results['state_performance']['total_sellers'].sum()
         st.markdown(f"""
         <div class="metric-card metric-card-orange">
-            <div class="metric-value">{unique_sellers:,}</div>
-            <div class="metric-label">Total Seller (Active)</div>
+            <div class="metric-value">{total_sellers:,}</div>
+            <div class="metric-label">Total Seller Aktif</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
-        avg_rating = (rating_dist['review_score'] * rating_dist['percentage'] / 100).sum()
+        avg_rating = (results['review_distribution']['count'] * results['review_distribution']['review_score']).sum() / results['review_distribution']['count'].sum()
         st.markdown(f"""
-        <div class="metric-card" style="background: linear-gradient(135deg, #6A1B9A, #AB47BC);">
+        <div class="metric-card metric-card-purple">
             <div class="metric-value">⭐ {avg_rating:.2f}</div>
             <div class="metric-label">Rata-rata Rating</div>
         </div>
         """, unsafe_allow_html=True)
     
-    # Ringkasan Pengiriman
+    # Ringkasan pengiriman
     st.markdown("---")
     st.markdown("## 📊 Ringkasan Pengiriman")
+    
+    delivery_stats = results['delivery_rating']
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        mean_faster = rating_data[rating_data['delivery_status'] == 'Lebih Cepat']['mean_rating'].values[0]
-        count_faster = rating_data[rating_data['delivery_status'] == 'Lebih Cepat']['count'].values[0]
-        pct_faster = (count_faster / total_orders * 100)
+        faster_data = delivery_stats[delivery_stats['delivery_status'] == 'Lebih Cepat'].iloc[0]
+        pct_faster = (faster_data['count'] / delivery_stats['count'].sum() * 100)
         st.markdown(f"""
         <div class="metric-card metric-card-green">
-            <div class="metric-value">⭐ {mean_faster:.2f}</div>
-            <div class="metric-label">🚀 Lebih Cepat<br>{count_faster:,} ({pct_faster:.1f}%)</div>
+            <div class="metric-value">⭐ {faster_data['mean_rating']:.2f}</div>
+            <div class="metric-label">🚀 Lebih Cepat<br>{faster_data['count']:,} ({pct_faster:.1f}%)</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        mean_ontime = rating_data[rating_data['delivery_status'] == 'Tepat Waktu']['mean_rating'].values[0]
-        count_ontime = rating_data[rating_data['delivery_status'] == 'Tepat Waktu']['count'].values[0]
-        pct_ontime = (count_ontime / total_orders * 100)
+        ontime_data = delivery_stats[delivery_stats['delivery_status'] == 'Tepat Waktu'].iloc[0]
+        pct_ontime = (ontime_data['count'] / delivery_stats['count'].sum() * 100)
         st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">⭐ {mean_ontime:.2f}</div>
-            <div class="metric-label">✅ Tepat Waktu<br>{count_ontime:,} ({pct_ontime:.1f}%)</div>
+        <div class="metric-card metric-card-blue">
+            <div class="metric-value">⭐ {ontime_data['mean_rating']:.2f}</div>
+            <div class="metric-label">✅ Tepat Waktu<br>{ontime_data['count']:,} ({pct_ontime:.1f}%)</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        mean_late = rating_data[rating_data['delivery_status'] == 'Terlambat']['mean_rating'].values[0]
-        count_late = rating_data[rating_data['delivery_status'] == 'Terlambat']['count'].values[0]
-        pct_late = (count_late / total_orders * 100)
+        late_data = delivery_stats[delivery_stats['delivery_status'] == 'Terlambat'].iloc[0]
+        pct_late = (late_data['count'] / delivery_stats['count'].sum() * 100)
         st.markdown(f"""
         <div class="metric-card metric-card-red">
-            <div class="metric-value">⭐ {mean_late:.2f}</div>
-            <div class="metric-label">⚠️ Terlambat<br>{count_late:,} ({pct_late:.1f}%)</div>
+            <div class="metric-value">⭐ {late_data['mean_rating']:.2f}</div>
+            <div class="metric-label">⚠️ Terlambat<br>{late_data['count']:,} ({pct_late:.1f}%)</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -365,82 +372,81 @@ if analysis_type == "🏠 Overview Dashboard":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        top_state = state_data.loc[state_data['total_products'].idxmax()]
+        top_state = results['state_performance'].loc[results['state_performance']['total_products_sold'].idxmax()]
         st.markdown(f"""
-        <div class="metric-card">
+        <div class="metric-card metric-card-blue">
             <div class="metric-value">{top_state['seller_state']}</div>
-            <div class="metric-label">🏆 Negara dengan Penjualan Tertinggi<br>{top_state['total_products']:,} produk</div>
+            <div class="metric-label">🏆 Negara dengan Penjualan Tertinggi<br>{top_state['total_products_sold']:,} produk</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        top_city = city_data.loc[city_data['total_products_sold'].idxmax()]
+        top_city = city_data_clean.iloc[0]
         st.markdown(f"""
         <div class="metric-card metric-card-green">
-            <div class="metric-value">{top_city['seller_city']}</div>
+            <div class="metric-value">{top_city['seller_city'].title()}</div>
             <div class="metric-label">🏙️ Kota Terlaris<br>{top_city['total_products_sold']:,} produk</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        top_prod = city_data[city_data['total_sellers'] >= 3].nlargest(1, 'productivity')
+        top_prod = city_data_clean[city_data_clean['total_sellers'] >= 3].nlargest(1, 'avg_products_per_seller')
         if len(top_prod) > 0:
             st.markdown(f"""
             <div class="metric-card metric-card-orange">
-                <div class="metric-value">{top_prod.iloc[0]['productivity']:.0f}</div>
-                <div class="metric-label">🏆 Produktivitas Tertinggi<br>{top_prod.iloc[0]['seller_city']}</div>
+                <div class="metric-value">{top_prod.iloc[0]['avg_products_per_seller']:.0f}</div>
+                <div class="metric-label">🏆 Produktivitas Tertinggi<br>{top_prod.iloc[0]['seller_city'].title()}</div>
             </div>
             """, unsafe_allow_html=True)
     
     # Data Overview
     st.markdown("---")
-    st.markdown("## 📊 Data Overview Ringkasan")
+    st.markdown("## 📊 Data Overview")
     
     st.markdown("### 🏙️ Top 5 Kota dengan Penjualan Tertinggi")
-    top5_cities = city_data.nlargest(5, 'total_products_sold')[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold', 'productivity']]
+    st.dataframe(city_data_clean.nlargest(5, 'total_products_sold')[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold']].style.format({
+        'total_products_sold': '{:,.0f}',
+        'total_sellers': '{:,.0f}'
+    }))
     
-    # Format dataframe untuk display
-    display_df = top5_cities.copy()
-    display_df['productivity'] = display_df['productivity'].apply(lambda x: f"{x:.1f}")
-    display_df['total_products_sold'] = display_df['total_products_sold'].apply(lambda x: f"{x:,}")
-    display_df['total_sellers'] = display_df['total_sellers'].apply(lambda x: f"{x:,}")
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
-    
-    st.markdown("### 🏆 Top 5 Negara Bagian dengan Penjualan Tertinggi")
-    top5_states = state_data.nlargest(5, 'total_products')[['seller_state', 'total_sellers', 'total_products']]
-    top5_states['total_products'] = top5_states['total_products'].apply(lambda x: f"{x:,}")
-    top5_states['total_sellers'] = top5_states['total_sellers'].apply(lambda x: f"{x:,}")
-    st.dataframe(top5_states, use_container_width=True, hide_index=True)
+    st.markdown("### 🏆 Top Negara Bagian dengan Penjualan Tertinggi")
+    st.dataframe(results['state_performance'].sort_values('total_products_sold', ascending=False)[['seller_state', 'total_sellers', 'total_products_sold']].style.format({
+        'total_products_sold': '{:,.0f}',
+        'total_sellers': '{:,.0f}'
+    }))
 
 # ============================================
-# MENU 2: PERTANYAAN 1 - ANALISIS PENGIRIMAN
+# 9. MENU 2: PERTANYAAN 1 - PENGARUH WAKTU PENGIRIMAN
 # ============================================
-elif analysis_type == "📦 Pertanyaan 1: Analisis Pengiriman":
+
+elif analysis_type == "📦 Pertanyaan 1: Pengaruh Waktu Pengiriman":
     st.markdown("# 📦 Pertanyaan 1: Pengaruh Waktu Pengiriman terhadap Kepuasan Pelanggan")
+    st.markdown("**Bagaimana perbedaan rata-rata rating pelanggan (skala 1–5) antara pesanan yang lebih cepat, tepat waktu, dan terlambat selama periode 2016-2018?**")
+    st.markdown("---")
     
     # Sub-menu untuk Pertanyaan 1
     sub_menu = st.radio(
         "Pilih Sub Analisis:",
-        ["📊 Rata-rata Rating per Status", "📈 Distribusi Rating", "⏱️ Rentang Keterlambatan", "📋 Uji Statistik"],
+        ["Rata-rata Rating per Status", "Distribusi Rating", "Analisis Rentang Keterlambatan"],
         horizontal=True
     )
     
-    if sub_menu == "📊 Rata-rata Rating per Status":
+    if sub_menu == "Rata-rata Rating per Status":
         st.markdown("## 📊 Rata-rata Rating per Status Pengiriman")
         
-        # Bar chart dengan warna #1E88E5
+        delivery_stats = results['delivery_rating'].copy()
+        
+        # Bar chart
         fig, ax = plt.subplots(figsize=(10, 6))
-        colors_bar = {'Lebih Cepat': PRIMARY_COLOR, 'Tepat Waktu': PRIMARY_COLOR, 'Terlambat': WARNING_COLOR}
-        bars = ax.bar(rating_data['delivery_status'], rating_data['mean_rating'], 
-                      color=[colors_bar.get(x, PRIMARY_COLOR) for x in rating_data['delivery_status']],
-                      edgecolor='black', linewidth=1.5, yerr=rating_data['sem'] * 1.96, capsize=5)
+        bars = ax.bar(delivery_stats['delivery_status'], delivery_stats['mean_rating'], 
+                      color='#1E88E5', edgecolor='black', linewidth=1.5)
         ax.set_ylim(0, 5.5)
         ax.set_ylabel('Rata-rata Rating (1-5)', fontsize=12, fontweight='bold')
         ax.set_xlabel('Status Pengiriman', fontsize=12, fontweight='bold')
-        ax.set_title('Perbandingan Rata-rata Rating Berdasarkan Status Pengiriman', fontsize=14, fontweight='bold')
+        ax.set_title('Perbandingan Rata-rata Rating Berdasarkan Status Pengiriman\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         
-        for bar, val in zip(bars, rating_data['mean_rating']):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, f'{val:.2f}', 
+        for bar, val in zip(bars, delivery_stats['mean_rating']):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.08, f'{val:.2f}', 
                     ha='center', va='bottom', fontsize=12, fontweight='bold')
         
         ax.grid(axis='y', alpha=0.3)
@@ -448,280 +454,207 @@ elif analysis_type == "📦 Pertanyaan 1: Analisis Pengiriman":
         
         # Tabel data
         st.markdown("### 📋 Statistik Rating per Status")
-        stats_display = rating_data.copy()
-        stats_display['count'] = stats_display['count'].apply(lambda x: f"{x:,}")
-        stats_display['std'] = stats_display['std'].apply(lambda x: f"{x:.2f}")
-        stats_display['sem'] = stats_display['sem'].apply(lambda x: f"{x:.3f}")
-        st.dataframe(stats_display, use_container_width=True, hide_index=True)
+        st.dataframe(delivery_stats.style.format({
+            'mean_rating': '{:.2f}',
+            'count': '{:,.0f}',
+            'std': '{:.2f}'
+        }))
         
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Pertanyaan 1</div>', unsafe_allow_html=True)
         st.markdown(f"""
-        <div class="insight-box">
-            <div class="insight-title">💡 Insight (Berdasarkan Data Asli)</div>
-            <ul>
-                <li>Pengiriman <b>Lebih Cepat</b> memiliki rating tertinggi (<b>{rating_data[rating_data['delivery_status']=='Lebih Cepat']['mean_rating'].values[0]:.2f}</b>/5)</li>
-                <li>Pengiriman <b>Terlambat</b> memiliki rating terendah (<b>{rating_data[rating_data['delivery_status']=='Terlambat']['mean_rating'].values[0]:.2f}</b>/5)</li>
-                <li>Selisih rating antara Lebih Cepat dan Terlambat: <b>{rating_data[rating_data['delivery_status']=='Lebih Cepat']['mean_rating'].values[0] - rating_data[rating_data['delivery_status']=='Terlambat']['mean_rating'].values[0]:.2f} poin</b></li>
-                <li>Pengiriman lebih cepat memberikan kepuasan lebih tinggi secara signifikan</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        - Rating tertinggi: **Lebih Cepat & Tepat Waktu ({delivery_stats.loc[delivery_stats['delivery_status'] == 'Lebih Cepat', 'mean_rating'].values[0]:.2f})**
+        - Rating terendah: **Terlambat ({delivery_stats.loc[delivery_stats['delivery_status'] == 'Terlambat', 'mean_rating'].values[0]:.2f})**
+        - Selisih rating: **{delivery_stats.loc[delivery_stats['delivery_status'] == 'Lebih Cepat', 'mean_rating'].values[0] - delivery_stats.loc[delivery_stats['delivery_status'] == 'Terlambat', 'mean_rating'].values[0]:.2f} poin** antara Lebih Cepat vs Terlambat
+        - Pengiriman lebih cepat memberikan kepuasan lebih tinggi.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    elif sub_menu == "📈 Distribusi Rating":
-        st.markdown("## 📊 Distribusi Rating per Status Pengiriman")
+    elif sub_menu == "Distribusi Rating":
+        st.markdown("## 📊 Distribusi Rating")
         
-        # Stacked bar chart
-        pivot_data = rating_by_status.pivot(index='delivery_status', columns='rating', values='percentage')
-        pivot_data = pivot_data.reindex(['Lebih Cepat', 'Tepat Waktu', 'Terlambat'])
+        rating_dist = results['review_distribution']
         
-        fig, ax = plt.subplots(figsize=(12, 6))
-        rating_colors = [DARK_BLUE, PRIMARY_COLOR, LIGHT_BLUE, SECONDARY_COLOR, DARK_BLUE]
-        pivot_data.plot(kind='bar', stacked=True, ax=ax, color=rating_colors, edgecolor='black', width=0.7)
-        ax.set_ylabel('Persentase (%)', fontsize=12, fontweight='bold')
-        ax.set_xlabel('Status Pengiriman', fontsize=12, fontweight='bold')
-        ax.set_title('Distribusi Rating per Status Pengiriman', fontsize=14, fontweight='bold')
-        ax.legend(title='Rating', bbox_to_anchor=(1.05, 1), loc='upper left')
-        ax.set_ylim(0, 100)
+        # Bar chart distribusi rating
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bars = ax.bar(rating_dist['review_score'].astype(str), rating_dist['count'], 
+                      color='#1E88E5', edgecolor='black', linewidth=1.5)
+        ax.set_ylabel('Jumlah', fontsize=12, fontweight='bold')
+        ax.set_xlabel('Rating', fontsize=12, fontweight='bold')
+        ax.set_title('Distribusi Rating Pelanggan\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         
-        for container in ax.containers:
-            labels = [f'{val:.1f}%' if val > 5 else '' for val in container.datavalues]
-            ax.bar_label(container, labels=labels, fontsize=8, label_type='center')
+        for bar, val, pct in zip(bars, rating_dist['count'], rating_dist['percentage']):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 500, 
+                    f'{val:,}\n({pct:.1f}%)', ha='center', va='bottom', fontsize=10, fontweight='bold')
         
-        plt.tight_layout()
+        ax.grid(axis='y', alpha=0.3)
         st.pyplot(fig)
         
-        # Pie chart distribusi rating
-        st.markdown("## 📊 Distribusi Rating Keseluruhan")
+        st.markdown("### 📋 Data Distribusi Rating")
+        st.dataframe(rating_dist.style.format({
+            'count': '{:,.0f}',
+            'percentage': '{:.1f}%'
+        }))
         
-        fig2, ax2 = plt.subplots(figsize=(8, 8))
-        colors_pie = [WARNING_COLOR, '#FFB347', '#FFD700', SUCCESS_COLOR, DARK_BLUE]
-        wedges, texts, autotexts = ax2.pie(rating_dist['percentage'], labels=[f"{s} ★" for s in rating_dist['review_score']],
-                                            autopct='%1.1f%%', colors=colors_pie, startangle=90,
-                                            shadow=True)
-        for autotext in autotexts:
-            autotext.set_fontsize(11)
-            autotext.set_fontweight('bold')
-        ax2.set_title('Distribusi Rating Keseluruhan', fontsize=14, fontweight='bold')
-        st.pyplot(fig2)
-        
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Distribusi Rating</div>', unsafe_allow_html=True)
+        rating_5_pct = rating_dist[rating_dist['review_score'] == 5]['percentage'].values[0]
+        rating_4_pct = rating_dist[rating_dist['review_score'] == 4]['percentage'].values[0]
         st.markdown(f"""
-        <div class="insight-box">
-            <div class="insight-title">💡 Insight Distribusi Rating</div>
-            <ul>
-                <li><b>Rating 5 mendominasi</b> dengan <b>{rating_dist[rating_dist['review_score']==5]['percentage'].values[0]:.1f}%</b> dari total ulasan</li>
-                <li>Rating 4-5 (positif): <b>{rating_dist[rating_dist['review_score']>=4]['percentage'].sum():.1f}%</b></li>
-                <li>Rating 1-3 (negatif): hanya <b>{rating_dist[rating_dist['review_score']<=3]['percentage'].sum():.1f}%</b></li>
-                <li>Mayoritas pelanggan memberikan rating positif</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        - Rating **5 mendominasi** dengan {rating_5_pct:.1f}% dari total keseluruhan
+        - Rating **4** adalah kontributor terbesar kedua ({rating_4_pct:.1f}%)
+        - Rating 1-3 hanya **22.9%** dari total keseluruhan
+        - **Mayoritas pelanggan memberikan rating positif** (rating 4-5: {rating_4_pct + rating_5_pct:.1f}%)
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    elif sub_menu == "⏱️ Rentang Keterlambatan":
-        st.markdown("## ⏱️ Analisis Rating Berdasarkan Rentang Keterlambatan")
+    elif sub_menu == "Analisis Rentang Keterlambatan":
+        st.markdown("## 📊 Analisis Rentang Keterlambatan")
         
-        # Bar chart rentang keterlambatan
-        delay_order = ['1-3 hari', '4-7 hari', '> 7 hari']
-        delay_data_sorted = delay_data.copy()
-        delay_data_sorted['delay_range'] = pd.Categorical(delay_data_sorted['delay_range'], categories=delay_order, ordered=True)
-        delay_data_sorted = delay_data_sorted.sort_values('delay_range')
+        delay_data = results['delay_rating'].copy()
         
         fig, ax = plt.subplots(figsize=(10, 6))
-        bars = ax.bar(delay_data_sorted['delay_range'], delay_data_sorted['mean_rating'], 
-                      color=[PRIMARY_COLOR, PRIMARY_COLOR, WARNING_COLOR], edgecolor='black', linewidth=1.5)
+        bars = ax.bar(delay_data['delay_range'], delay_data['mean_rating'], 
+                      color='#1E88E5', edgecolor='black', linewidth=1.5)
         ax.set_ylim(0, 5.5)
         ax.set_ylabel('Rata-rata Rating (1-5)', fontsize=12, fontweight='bold')
         ax.set_xlabel('Rentang Keterlambatan', fontsize=12, fontweight='bold')
-        ax.set_title('Rata-rata Rating Berdasarkan Rentang Keterlambatan', fontsize=14, fontweight='bold')
+        ax.set_title('Rata-rata Rating Berdasarkan Rentang Keterlambatan Pengiriman\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         
-        for bar, val in zip(bars, delay_data_sorted['mean_rating']):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, f'{val:.2f}', 
+        for bar, val in zip(bars, delay_data['mean_rating']):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.08, f'{val:.2f}', 
                     ha='center', va='bottom', fontsize=11, fontweight='bold')
         
         ax.grid(axis='y', alpha=0.3)
         st.pyplot(fig)
         
-        # Tabel data
-        st.markdown("### 📋 Data Rating per Rentang Keterlambatan")
-        delay_display = delay_data_sorted.copy()
-        delay_display['mean_rating'] = delay_display['mean_rating'].apply(lambda x: f"{x:.2f}")
-        delay_display['count'] = delay_display['count'].apply(lambda x: f"{x:,}")
-        st.dataframe(delay_display, use_container_width=True, hide_index=True)
+        st.markdown("### 📋 Data Rentang Keterlambatan")
+        st.dataframe(delay_data.style.format({
+            'mean_rating': '{:.2f}',
+            'count': '{:,.0f}'
+        }))
         
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Rentang Keterlambatan</div>', unsafe_allow_html=True)
         st.markdown(f"""
-        <div class="warning-box">
-            <div class="insight-title">⚠️ Insight Rentang Keterlambatan</div>
-            <ul>
-                <li>Keterlambatan <b>1-3 hari</b>: rating turun ke <b>3.81</b></li>
-                <li>Keterlambatan <b>4-7 hari</b>: rating turun drastis ke <b>3.52</b></li>
-                <li>Kategori <b>'&gt;7 hari'</b> dalam data ini didominasi pengiriman <b>LEBIH CEPAT</b> (negatif days)</li>
-                <li><b>Semakin lama keterlambatan, semakin rendah rating kepuasan pelanggan!</b></li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    elif sub_menu == "📋 Uji Statistik":
-        st.markdown("## 📋 Uji Statistik (Berdasarkan Data Asli)")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### 📊 Perbandingan Lebih Cepat vs Terlambat")
-            mean_faster = rating_data[rating_data['delivery_status'] == 'Lebih Cepat']['mean_rating'].values[0]
-            mean_late = rating_data[rating_data['delivery_status'] == 'Terlambat']['mean_rating'].values[0]
-            diff = mean_faster - mean_late
-            
-            st.metric("Rata-rata Lebih Cepat", f"{mean_faster:.2f}")
-            st.metric("Rata-rata Terlambat", f"{mean_late:.2f}", delta=f"{diff:+.2f}")
-            
-            # Simulasi t-test (berdasarkan data asli, perbedaan signifikan)
-            st.markdown(f"""
-            <div class="success-box">
-                <b>✅ Uji T-Test:</b><br>
-                t-statistik: 13.5777<br>
-                p-value: 0.000000<br>
-                <b>Kesimpulan: Perbedaan SIGNIFIKAN (p &lt; 0.05)</b>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown("### 📊 Perbandingan Tepat Waktu vs Terlambat")
-            mean_ontime = rating_data[rating_data['delivery_status'] == 'Tepat Waktu']['mean_rating'].values[0]
-            mean_late = rating_data[rating_data['delivery_status'] == 'Terlambat']['mean_rating'].values[0]
-            diff2 = mean_ontime - mean_late
-            
-            st.metric("Rata-rata Tepat Waktu", f"{mean_ontime:.2f}")
-            st.metric("Rata-rata Terlambat", f"{mean_late:.2f}", delta=f"{diff2:+.2f}")
-            
-            st.markdown(f"""
-            <div class="success-box">
-                <b>✅ Uji T-Test:</b><br>
-                t-statistik: 1.3619<br>
-                p-value: 0.173232<br>
-                <b>Kesimpulan: Tidak signifikan (p > 0.05)</b>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("### 📊 ANOVA (3 Kelompok Sekaligus)")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("F-Statistic", "92.5340")
-        with col2:
-            st.metric("P-Value", "0.000000")
-        
-        st.markdown(f"""
-        <div class="success-box">
-            <b>✅ Kesimpulan ANOVA:</b><br>
-            Ada perbedaan signifikan di MINIMAL satu pasang kelompok pengiriman!<br>
-            Perlu Post-Hoc Test (Tukey HSD).
-        </div>
-        
-        <div class="insight-box">
-            <div class="insight-title">📌 Kesimpulan Uji Statistik</div>
-            <ul>
-                <li><b>Lebih Cepat vs Terlambat</b>: Signifikan - lebih cepat memberikan rating lebih tinggi</li>
-                <li><b>Tepat Waktu vs Terlambat</b>: Tidak signifikan</li>
-                <li><b>Lebih Cepat vs Tepat Waktu</b>: Tidak signifikan (keduanya 4.22)</li>
-                <li>Pengiriman yang tidak terlambat memberikan kepuasan lebih baik</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        - Rating tertinggi: **>7 hari ({delay_data[delay_data['delay_range'] == '> 7 hari']['mean_rating'].values[0]:.2f})** - karena didominasi pengiriman cepat
+        - Rating terendah: **4-7 hari ({delay_data[delay_data['delay_range'] == '4-7 hari']['mean_rating'].values[0]:.2f})**
+        - Jumlah sample: **>7 hari = {delay_data[delay_data['delay_range'] == '> 7 hari']['count'].values[0]:,} pesanan** | 1-3 hari = 137 | 4-7 hari = 125
+        - **Perlu diperhatikan:** Kategori '>7 hari' dalam data ini adalah pengiriman LEBIH CEPAT (negatif days)
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================
-# MENU 3: PERTANYAAN 1 - DETAIL RATING
+# 10. MENU 3: PERTANYAAN 1 - DETAIL RATING
 # ============================================
+
 elif analysis_type == "⭐ Pertanyaan 1: Detail Rating":
     st.markdown("# ⭐ Detail Analisis Rating Pelanggan")
+    st.markdown("---")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("## 📊 Distribusi Rating")
-        fig, ax = plt.subplots(figsize=(8, 6))
-        bars = ax.bar(rating_dist['review_score'], rating_dist['count'], color=PRIMARY_COLOR, edgecolor='black', linewidth=1.5)
-        ax.set_xlabel('Rating', fontsize=12)
-        ax.set_ylabel('Jumlah Ulasan', fontsize=12)
-        ax.set_title('Distribusi Rating Pelanggan', fontsize=14, fontweight='bold')
-        ax.set_xticks(range(1, 6))
+        st.markdown("## 📊 Distribusi Rating per Status")
         
-        for bar, v, pct in zip(bars, rating_dist['count'], rating_dist['percentage']):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 500, 
-                    f'{v:,}\n({pct:.1f}%)', ha='center', va='bottom', fontsize=10, fontweight='bold')
+        rating_dist = results['delivery_rating'].copy()
+        
+        fig, ax = plt.subplots(figsize=(8, 6))
+        bars = ax.bar(rating_dist['delivery_status'], rating_dist['mean_rating'], 
+                      color='#1E88E5', edgecolor='black', linewidth=1.5)
+        ax.set_ylabel('Rata-rata Rating', fontsize=12)
+        ax.set_title('Rata-rata Rating per Status Pengiriman', fontsize=14)
+        ax.set_ylim(0, 5.5)
+        
+        for bar, val in zip(bars, rating_dist['mean_rating']):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, f'{val:.2f}', 
+                    ha='center', va='bottom', fontsize=11, fontweight='bold')
+        
         st.pyplot(fig)
     
     with col2:
-        st.markdown("## 📊 Boxplot Rating per Status (Simulasi)")
-        # Simulasi boxplot berdasarkan mean dan std
-        np.random.seed(42)
-        data_faster = np.random.normal(4.22, 1.23, 1000).clip(1, 5)
-        data_ontime = np.random.normal(4.22, 1.13, 1000).clip(1, 5)
-        data_late = np.random.normal(4.09, 1.34, 1000).clip(1, 5)
+        st.markdown("## 📊 Distribusi Status Pengiriman")
+        
+        status_dist = results['delivery_status_dist'].copy()
         
         fig, ax = plt.subplots(figsize=(8, 6))
-        bp = ax.boxplot([data_faster, data_ontime, data_late], 
-                        labels=['Lebih Cepat', 'Tepat Waktu', 'Terlambat'], 
-                        patch_artist=True)
-        colors_box = [SUCCESS_COLOR, PRIMARY_COLOR, WARNING_COLOR]
-        for patch, color in zip(bp['boxes'], colors_box):
-            patch.set_facecolor(color)
-            patch.set_alpha(0.7)
-        ax.set_ylabel('Rating', fontsize=12)
-        ax.set_title('Distribusi Rating per Status Pengiriman', fontsize=14, fontweight='bold')
-        ax.set_ylim(0, 5.5)
-        ax.grid(axis='y', alpha=0.3)
+        colors_pie = ['#2ecc71', '#f39c12', '#e74c3c']
+        wedges, texts, autotexts = ax.pie(status_dist['count'], labels=status_dist['delivery_status'],
+                                           autopct='%1.1f%%', colors=colors_pie, startangle=90,
+                                           shadow=True)
+        for autotext in autotexts:
+            autotext.set_fontsize(11)
+            autotext.set_fontweight('bold')
+        ax.set_title('Distribusi Status Pengiriman', fontsize=14, fontweight='bold')
         st.pyplot(fig)
     
     st.markdown("---")
     st.markdown("## 📊 Statistik Deskriptif Rating")
     
-    # Statistik deskriptif
-    stats_desc = pd.DataFrame({
-        'Status': ['Lebih Cepat', 'Tepat Waktu', 'Terlambat'],
-        'Rata-rata': [4.22, 4.22, 4.09],
-        'Std Dev': [1.23, 1.13, 1.34],
-        'Jumlah Sampel': ['17,981', '72', '17,468']
-    })
-    st.dataframe(stats_desc, use_container_width=True, hide_index=True)
+    rating_stats = results['delivery_rating'].copy()
+    st.dataframe(rating_stats.style.format({
+        'mean_rating': '{:.2f}',
+        'count': '{:,.0f}',
+        'std': '{:.2f}'
+    }))
     
-    st.markdown(f"""
-    <div class="insight-box">
-        <div class="insight-title">💡 Insight Utama Rating Pelanggan</div>
-        <ul>
-            <li><b>Rating 5 mendominasi</b> dengan <b>{rating_dist[rating_dist['review_score']==5]['percentage'].values[0]:.1f}%</b> dari seluruh ulasan</li>
-            <li>Pengiriman <b>Lebih Cepat</b> dan <b>Tepat Waktu</b> memiliki rata-rata rating sama (<b>4.22</b>)</li>
-            <li>Pengiriman <b>Terlambat</b> memiliki rata-rata rating <b>4.09</b> (lebih rendah <b>0.13 poin</b>)</li>
-            <li>Rating positif (4-5): <b>{rating_dist[rating_dist['review_score']>=4]['percentage'].sum():.1f}%</b></li>
-            <li>Rating negatif (1-3): <b>{rating_dist[rating_dist['review_score']<=3]['percentage'].sum():.1f}%</b></li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+    st.markdown('<div class="insight-title">📌 Insight Utama Rating Pelanggan</div>', unsafe_allow_html=True)
+    st.markdown("""
+    1. **Rating 5 mendominasi** (57.8% dari seluruh review)
+    2. **Pengiriman lebih cepat** memiliki rating tertinggi (4.22)
+    3. **Pengiriman terlambat** memiliki rating terendah (4.09)
+    4. Proporsi **Lebih Cepat (50.6%)** dan **Terlambat (49.2%)** hampir seimbang
+    5. **Hanya 0.2%** pengiriman yang tepat waktu
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Uji Statistik
+    st.markdown("---")
+    st.markdown("## 📊 Uji Statistik (T-Test & ANOVA)")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### T-Test (Lebih Cepat vs Terlambat)")
+        st.metric("📊 T-Statistic", f"{results['ttest']['t_statistic']:.4f}")
+        st.metric("🎯 P-Value", f"{results['ttest']['p_value']:.6f}")
+        st.success("✅ **SIGNIFIKAN** - Ada perbedaan signifikan antara rating Lebih Cepat dan Terlambat")
+    
+    with col2:
+        st.markdown("### ANOVA (3 Kelompok)")
+        st.metric("📊 F-Statistic", f"{results['anova']['f_statistic']:.4f}")
+        st.metric("🎯 P-Value", f"{results['anova']['p_value']:.6f}")
+        st.success("✅ **SIGNIFIKAN** - Ada perbedaan signifikan di minimal satu pasang kelompok")
 
 # ============================================
-# MENU 4: PERTANYAAN 2 - ANALISIS SELLER
+# 11. MENU 4: PERTANYAAN 2 - ANALISIS SELLER & LOKASI
 # ============================================
-elif analysis_type == "📍 Pertanyaan 2: Analisis Seller":
+
+elif analysis_type == "📍 Pertanyaan 2: Analisis Seller & Lokasi":
     st.markdown("# 📍 Pertanyaan 2: Hubungan Lokasi Seller dengan Volume Penjualan")
+    st.markdown("**Apakah ada hubungan yang kuat antara jumlah seller di setiap kota/state dengan total produk yang terjual selama periode 2016-2018, serta kota mana yang memiliki penjualan tertinggi dan produktivitas seller tertinggi?**")
+    st.markdown("---")
     
     # Sub-menu untuk Pertanyaan 2
     sub_menu = st.radio(
         "Pilih Sub Analisis:",
-        ["🏙️ Top Seller Cities", "📈 Korelasi Seller vs Penjualan", "⭐ Produktivitas Seller"],
+        ["Top Seller & Penjualan", "Korelasi Seller vs Penjualan", "Produktivitas Seller", "Analisis Lokasi"],
         horizontal=True
     )
     
-    if sub_menu == "🏙️ Top Seller Cities":
+    if sub_menu == "Top Seller & Penjualan":
         st.markdown("## 🏙️ Top 10 Kota dengan Penjualan Tertinggi")
         
-        top_cities = city_data[city_data['total_products_sold'] > 0].nlargest(10, 'total_products_sold')
-        top_cities = top_cities.sort_values('total_products_sold', ascending=True)
+        top_cities = city_data_clean.nlargest(10, 'total_products_sold').sort_values('total_products_sold', ascending=True)
         
         fig, ax = plt.subplots(figsize=(12, 6))
         colors_h = plt.cm.Blues(np.linspace(0.3, 0.9, len(top_cities)))
-        bars = ax.barh(top_cities['seller_city'], top_cities['total_products_sold'], 
+        bars = ax.barh(top_cities['seller_city'].str.title(), top_cities['total_products_sold'], 
                        color=colors_h, edgecolor='black', linewidth=1.5)
         ax.set_xlabel('Total Produk Terjual', fontsize=12, fontweight='bold')
         ax.set_ylabel('Kota', fontsize=12, fontweight='bold')
-        ax.set_title('Top 10 Kota dengan Penjualan Tertinggi', fontsize=14, fontweight='bold')
+        ax.set_title('Top 10 Kota dengan Total Produk Terjual Terbanyak\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         
         max_val = top_cities['total_products_sold'].max()
         for bar, val in zip(bars, top_cities['total_products_sold']):
@@ -731,257 +664,241 @@ elif analysis_type == "📍 Pertanyaan 2: Analisis Seller":
         plt.tight_layout()
         st.pyplot(fig)
         
-        st.markdown("### 📋 Data Top 10 Kota")
-        display_df = top_cities[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold', 'productivity']].copy()
-        display_df['productivity'] = display_df['productivity'].apply(lambda x: f"{x:.1f}")
-        display_df['total_products_sold'] = display_df['total_products_sold'].apply(lambda x: f"{x:,}")
-        display_df['total_sellers'] = display_df['total_sellers'].apply(lambda x: f"{x:,}")
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
+        st.markdown("### 📋 Data Top 10 Kota Penjualan Tertinggi")
+        st.dataframe(top_cities[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold', 'avg_products_per_seller']].style.format({
+            'total_products_sold': '{:,.0f}',
+            'total_sellers': '{:,.0f}',
+            'avg_products_per_seller': '{:.1f}'
+        }))
         
-        # Top 5 States
-        st.markdown("## 🏆 Top 5 Negara Bagian dengan Penjualan Tertinggi")
-        top_states = state_data.nlargest(5, 'total_products')
+        st.markdown("## 🏆 Top Negara Bagian dengan Penjualan Tertinggi")
+        top_states = results['state_performance'].sort_values('total_products_sold', ascending=False)
         
         fig2, ax2 = plt.subplots(figsize=(10, 6))
-        bars2 = ax2.bar(top_states['seller_state'], top_states['total_products'], 
-                        color=PRIMARY_COLOR, edgecolor='black', linewidth=1.5)
+        bars2 = ax2.bar(top_states['seller_state'], top_states['total_products_sold'], 
+                        color='#1E88E5', edgecolor='black', linewidth=1.5)
         ax2.set_ylabel('Total Produk Terjual', fontsize=12, fontweight='bold')
         ax2.set_xlabel('Negara Bagian', fontsize=12, fontweight='bold')
-        ax2.set_title('Top 5 Negara Bagian dengan Penjualan Tertinggi', fontsize=14, fontweight='bold')
+        ax2.set_title('Penjualan per Negara Bagian\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         
-        for bar, val in zip(bars2, top_states['total_products']):
+        for bar, val in zip(bars2, top_states['total_products_sold']):
             ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 500, f'{val:,}', 
                      ha='center', va='bottom', fontsize=10, fontweight='bold')
         
         ax2.grid(axis='y', alpha=0.3)
         st.pyplot(fig2)
         
-        display_df2 = top_states[['seller_state', 'total_sellers', 'total_products']].copy()
-        display_df2['total_products'] = display_df2['total_products'].apply(lambda x: f"{x:,}")
-        display_df2['total_sellers'] = display_df2['total_sellers'].apply(lambda x: f"{x:,}")
-        st.dataframe(display_df2, use_container_width=True, hide_index=True)
+        st.dataframe(top_states[['seller_state', 'total_sellers', 'total_products_sold']].style.format({
+            'total_products_sold': '{:,.0f}',
+            'total_sellers': '{:,.0f}'
+        }))
     
-    elif sub_menu == "📈 Korelasi Seller vs Penjualan":
+    elif sub_menu == "Korelasi Seller vs Penjualan":
         st.markdown("## 📈 Korelasi Jumlah Seller vs Total Penjualan per Kota")
         
-        city_corr = city_data[city_data['total_sellers'] >= 3].copy()
-        city_corr = city_corr[city_corr['total_products_sold'] > 0]
+        city_corr = city_data_clean[city_data_clean['total_sellers'] >= 3].copy()
         
         fig, ax = plt.subplots(figsize=(10, 6))
         scatter = ax.scatter(city_corr['total_sellers'], city_corr['total_products_sold'],
-                             c=city_corr['total_products_sold'], cmap='Blues', 
+                             c=city_corr['total_products_sold'], cmap='viridis', 
                              s=80, alpha=0.7, edgecolor='black', linewidth=1)
         ax.set_xlabel('Jumlah Seller per Kota', fontsize=12, fontweight='bold')
         ax.set_ylabel('Total Produk Terjual', fontsize=12, fontweight='bold')
-        ax.set_title(f'Hubungan Jumlah Seller dengan Total Produk Terjual\n(Korelasi r = {correlation:.3f})', 
-                     fontsize=14, fontweight='bold')
+        ax.set_title('Hubungan Jumlah Seller dengan Total Produk Terjual per Kota\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
         plt.colorbar(scatter, ax=ax, label='Total Produk')
         ax.grid(True, alpha=0.3, linestyle='--')
         
-        if len(city_corr) > 1:
-            slope, intercept = np.polyfit(city_corr['total_sellers'], city_corr['total_products_sold'], 1)
-            x_line = np.array([city_corr['total_sellers'].min(), city_corr['total_sellers'].max()])
-            y_line = slope * x_line + intercept
-            ax.plot(x_line, y_line, 'r--', linewidth=2, label=f'Regresi (r = {correlation:.3f})')
-            ax.legend()
+        # Garis regresi
+        slope, intercept = np.polyfit(city_corr['total_sellers'], city_corr['total_products_sold'], 1)
+        x_line = np.array([city_corr['total_sellers'].min(), city_corr['total_sellers'].max()])
+        y_line = slope * x_line + intercept
+        ax.plot(x_line, y_line, 'r--', linewidth=2, label=f'Regresi (r = {results["correlation"]["pearson_r"]:.3f})')
+        ax.legend()
         
         plt.tight_layout()
         st.pyplot(fig)
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("📊 Korelasi Pearson", f"{correlation:.4f}")
+            st.metric("📊 Korelasi Pearson", f"{results['correlation']['pearson_r']:.4f}")
         with col2:
-            st.metric("📈 Korelasi Spearman", f"{spearman_corr:.4f}")
+            st.metric("📊 Korelasi Spearman", f"{results['correlation']['spearman_r']:.4f}")
+        
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Korelasi</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        - **Korelasi positif SANGAT KUAT** ({results['correlation']['pearson_r']:.3f})
+        - **Signifikan secara statistik** (p = {results['correlation']['p_value']:.4f} < 0.05)
+        - **Artinya:** Semakin banyak seller di suatu kota, semakin tinggi penjualannya.
+        - Jumlah kota dianalisis: {len(city_corr)} kota (dengan total_sellers ≥ 3)
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    elif sub_menu == "Produktivitas Seller":
+        st.markdown("## ⭐ Top 10 Kota dengan Produktivitas Seller Tertinggi")
+        
+        productive_cities = city_data_clean[city_data_clean['total_sellers'] >= 3].nlargest(10, 'avg_products_per_seller')
+        productive_cities = productive_cities.sort_values('avg_products_per_seller', ascending=True)
+        
+        fig, ax = plt.subplots(figsize=(12, 6))
+        colors_h2 = plt.cm.Greens(np.linspace(0.3, 0.9, len(productive_cities)))
+        bars = ax.barh(productive_cities['seller_city'].str.title(), productive_cities['avg_products_per_seller'], 
+                       color=colors_h2, edgecolor='black', linewidth=1.5)
+        ax.set_xlabel('Rata-rata Produk per Seller', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Kota', fontsize=12, fontweight='bold')
+        ax.set_title('Top 10 Kota dengan Produktivitas Seller Tertinggi\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
+        
+        max_val = productive_cities['avg_products_per_seller'].max()
+        for bar, val in zip(bars, productive_cities['avg_products_per_seller']):
+            ax.text(val + (max_val * 0.02), bar.get_y() + bar.get_height()/2, 
+                    f'{val:.1f}', va='center', ha='left', fontsize=10, fontweight='bold')
+        ax.grid(axis='x', alpha=0.3)
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        st.markdown("### 📋 Data Top 10 Kota Produktif")
+        st.dataframe(productive_cities[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold', 'avg_products_per_seller']].style.format({
+            'total_products_sold': '{:,.0f}',
+            'total_sellers': '{:,.0f}',
+            'avg_products_per_seller': '{:.1f}'
+        }))
+        
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Produktivitas Seller</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        - **{productive_cities.iloc[-1]['seller_city'].title()}** memiliki produktivitas tertinggi: **{productive_cities.iloc[-1]['avg_products_per_seller']:.0f} produk/seller**
+        - **Ibitinga** masuk dalam top produktif dengan **155.5 produk/seller**
+        - Kota dengan jumlah seller sedikit dapat memiliki produktivitas tinggi
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    elif sub_menu == "Analisis Lokasi":
+        st.markdown("## 🌎 Analisis Lokasi Geografis Penjualan")
+        
+        # Pie chart proporsi penjualan per state
+        st.markdown("### 📊 Proporsi Penjualan per Negara Bagian")
+        
+        state_data = results['state_performance'].copy()
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        colors_pie = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+        wedges, texts, autotexts = ax.pie(state_data['total_products_sold'], labels=state_data['seller_state'],
+                                           autopct='%1.1f%%', startangle=90, colors=colors_pie,
+                                           shadow=True, textprops={'fontsize': 11})
+        for autotext in autotexts:
+            autotext.set_fontsize(11)
+            autotext.set_fontweight('bold')
+        ax.set_title('Proporsi Penjualan per Negara Bagian\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        # Bar chart jumlah seller per state
+        st.markdown("### 📊 Jumlah Seller per Negara Bagian")
+        
+        top_states_seller = state_data.sort_values('total_sellers', ascending=True)
+        
+        fig2, ax2 = plt.subplots(figsize=(10, 6))
+        colors_h = plt.cm.Blues(np.linspace(0.3, 0.9, len(top_states_seller)))
+        bars = ax2.barh(top_states_seller['seller_state'], top_states_seller['total_sellers'], 
+                        color=colors_h, edgecolor='black', linewidth=1.5)
+        ax2.set_xlabel('Jumlah Seller', fontsize=12, fontweight='bold')
+        ax2.set_ylabel('Negara Bagian', fontsize=12, fontweight='bold')
+        ax2.set_title('Jumlah Seller per Negara Bagian\n(Periode 2016-2018)', fontsize=14, fontweight='bold')
+        
+        max_val = top_states_seller['total_sellers'].max()
+        for bar, val in zip(bars, top_states_seller['total_sellers']):
+            ax2.text(val + (max_val * 0.01), bar.get_y() + bar.get_height()/2, 
+                     f'{val:,}', va='center', ha='left', fontsize=10, fontweight='bold')
+        ax2.grid(axis='x', alpha=0.3)
+        plt.tight_layout()
+        st.pyplot(fig2)
+        
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.markdown('<div class="insight-title">📌 Insight Geografis</div>', unsafe_allow_html=True)
+        
+        total_sales_sp = state_data[state_data['seller_state'] == 'SP']['total_products_sold'].values[0]
+        total_sales_all = state_data['total_products_sold'].sum()
+        sp_pct = (total_sales_sp / total_sales_all * 100)
+        total_sellers_sp = state_data[state_data['seller_state'] == 'SP']['total_sellers'].values[0]
+        total_sellers_all = state_data['total_sellers'].sum()
+        sp_seller_pct = (total_sellers_sp / total_sellers_all * 100)
         
         st.markdown(f"""
-        <div class="insight-box">
-            <div class="insight-title">💡 Interpretasi Korelasi</div>
-            <ul>
-                <li><b>Korelasi SANGAT KUAT</b> (r = {correlation:.3f})</li>
-                <li><b>Hubungan positif</b>: Semakin banyak seller di suatu kota, semakin tinggi penjualannya</li>
-                <li><b>Signifikan secara statistik</b> (p-value = {p_value:.4f} &lt; 0.05)</li>
-                <li>Artinya: Konsentrasi seller berkorelasi kuat dengan volume penjualan</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    elif sub_menu == "⭐ Produktivitas Seller":
-        st.markdown("## ⭐ Top 10 Kota dengan Produktivitas Seller Tertinggi")
-        st.markdown("*Produktivitas = Rata-rata produk yang terjual per seller*")
-        
-        productive_cities = city_data[(city_data['total_sellers'] >= 3) & (city_data['productivity'] > 0)].nlargest(10, 'productivity')
-        productive_cities = productive_cities.sort_values('productivity', ascending=True)
-        
-        if len(productive_cities) > 0:
-            fig, ax = plt.subplots(figsize=(12, 6))
-            colors_h2 = plt.cm.Greens(np.linspace(0.3, 0.9, len(productive_cities)))
-            bars = ax.barh(productive_cities['seller_city'], productive_cities['productivity'], 
-                           color=colors_h2, edgecolor='black', linewidth=1.5)
-            ax.set_xlabel('Rata-rata Produk per Seller', fontsize=12, fontweight='bold')
-            ax.set_ylabel('Kota', fontsize=12, fontweight='bold')
-            ax.set_title('Top 10 Kota dengan Produktivitas Seller Tertinggi\n(minimal 3 seller)', fontsize=14, fontweight='bold')
-            
-            max_val = productive_cities['productivity'].max()
-            for bar, val in zip(bars, productive_cities['productivity']):
-                ax.text(val + (max_val * 0.02), bar.get_y() + bar.get_height()/2, 
-                        f'{val:.1f}', va='center', ha='left', fontsize=10, fontweight='bold')
-            ax.grid(axis='x', alpha=0.3)
-            plt.tight_layout()
-            st.pyplot(fig)
-            
-            st.markdown("### 📋 Data Top 10 Kota Produktif")
-            display_df = productive_cities[['seller_city', 'seller_state', 'total_sellers', 'total_products_sold', 'productivity']].copy()
-            display_df['productivity'] = display_df['productivity'].apply(lambda x: f"{x:.1f}")
-            display_df['total_products_sold'] = display_df['total_products_sold'].apply(lambda x: f"{x:,}")
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
-            
-            st.markdown(f"""
-            <div class="insight-box">
-                <div class="insight-title">💡 Insight Produktivitas</div>
-                <ul>
-                    <li><b>{productive_cities.iloc[-1]['seller_city']}</b> memiliki produktivitas tertinggi: <b>{productive_cities.iloc[-1]['productivity']:.1f}</b> produk/seller</li>
-                    <li>Kota dengan sedikit seller bisa sangat produktif</li>
-                    <li>Produktivitas tidak selalu linear dengan jumlah seller</li>
-                    <li>Perlu dipelajari strategi seller di kota produktif untuk diterapkan di wilayah lain</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.warning("Tidak ada kota dengan minimal 3 seller untuk ditampilkan")
+        - **SP (São Paulo)** mendominasi dengan **{sp_pct:.1f}%** dari total penjualan nasional
+        - **SP** juga memiliki **{sp_seller_pct:.1f}%** dari total seller
+        - **Sao Paulo city** menyumbang **{27357/total_sales_sp*100:.1f}%** dari total penjualan SP
+        - **Ketimpangan geografis** sangat signifikan dalam aktivitas e-commerce
+        - Perlu **ekspansi ke wilayah lain** untuk mengurangi ketergantungan pada SP
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================
-# MENU 5: PERTANYAAN 2 - ANALISIS LOKASI
+# 12. MENU 5: KESIMPULAN & REKOMENDASI
 # ============================================
-elif analysis_type == "🏙️ Pertanyaan 2: Analisis Lokasi":
-    st.markdown("# 🌎 Analisis Lokasi Geografis Penjualan")
-    
-    # Pie chart proporsi penjualan per state
-    st.markdown("## 📊 Proporsi Penjualan per Negara Bagian")
-    
-    fig, ax = plt.subplots(figsize=(10, 8))
-    colors_pie = [PRIMARY_COLOR, SECONDARY_COLOR, LIGHT_BLUE, SUCCESS_COLOR]
-    wedges, texts, autotexts = ax.pie(state_data['total_products'], labels=state_data['seller_state'],
-                                       autopct='%1.1f%%', startangle=90, colors=colors_pie,
-                                       shadow=True, textprops={'fontsize': 12})
-    for autotext in autotexts:
-        autotext.set_fontsize(11)
-        autotext.set_fontweight('bold')
-    ax.set_title('Proporsi Penjualan per Negara Bagian', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    st.pyplot(fig)
-    
-    # Bar chart jumlah seller per state
-    st.markdown("## 📊 Jumlah Seller per Negara Bagian")
-    
-    top_states_seller = state_data.sort_values('total_sellers', ascending=True)
-    
-    fig2, ax2 = plt.subplots(figsize=(10, 6))
-    colors_h = plt.cm.Blues(np.linspace(0.3, 0.9, len(top_states_seller)))
-    bars = ax2.barh(top_states_seller['seller_state'], top_states_seller['total_sellers'], 
-                    color=colors_h, edgecolor='black', linewidth=1.5)
-    ax2.set_xlabel('Jumlah Seller', fontsize=12, fontweight='bold')
-    ax2.set_ylabel('Negara Bagian', fontsize=12, fontweight='bold')
-    ax2.set_title('Jumlah Seller per Negara Bagian', fontsize=14, fontweight='bold')
-    
-    max_val = top_states_seller['total_sellers'].max()
-    for bar, val in zip(bars, top_states_seller['total_sellers']):
-        ax2.text(val + (max_val * 0.02), bar.get_y() + bar.get_height()/2, 
-                 f'{val:,}', va='center', ha='left', fontsize=10, fontweight='bold')
-    ax2.grid(axis='x', alpha=0.3)
-    plt.tight_layout()
-    st.pyplot(fig2)
-    
-    # Tabel data
-    st.markdown("## 📋 Data Lengkap per Negara Bagian")
-    display_df = state_data.copy()
-    display_df['total_products'] = display_df['total_products'].apply(lambda x: f"{x:,}")
-    display_df['total_sellers'] = display_df['total_sellers'].apply(lambda x: f"{x:,}")
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
-    
-    total_sales_sp = state_data[state_data['seller_state'] == 'SP']['total_products'].values[0]
-    total_sales_all = state_data['total_products'].sum()
-    sp_pct = (total_sales_sp / total_sales_all * 100)
-    
-    total_sellers_sp = state_data[state_data['seller_state'] == 'SP']['total_sellers'].values[0]
-    total_sellers_all = state_data['total_sellers'].sum()
-    sp_seller_pct = (total_sellers_sp / total_sellers_all * 100)
-    
-    st.markdown(f"""
-    <div class="insight-box">
-        <div class="insight-title">💡 Insight Geografis (Berdasarkan Data Asli)</div>
-        <ul>
-            <li><b>SP (São Paulo)</b> mendominasi dengan <b>{sp_pct:.1f}%</b> dari total penjualan nasional</li>
-            <li><b>SP</b> juga memiliki <b>{sp_seller_pct:.1f}%</b> dari total seller</li>
-            <li><b>Konsentrasi penjualan sangat tinggi</b> di wilayah São Paulo</li>
-            <li><b>Ketimpangan geografis</b> signifikan: 74.6% seller berada di SP</li>
-            <li><b>Peluang ekspansi</b> ke wilayah PR, RJ, MG masih terbuka lebar</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
 
-# ============================================
-# MENU 6: KESIMPULAN & REKOMENDASI
-# ============================================
 elif analysis_type == "📈 Kesimpulan & Rekomendasi":
     st.markdown("# 📈 Kesimpulan Akhir & Rekomendasi Bisnis")
-    st.markdown(f"📅 **Periode Analisis:** {start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}")
+    st.markdown("## Berdasarkan Analisis Data E-Commerce Brazil (2016-2018)")
     st.markdown("---")
     
     # Kesimpulan Pertanyaan 1
     st.markdown("## 📦 Pertanyaan 1: Pengaruh Waktu Pengiriman terhadap Kepuasan Pelanggan")
     
+    delivery_stats = results['delivery_rating']
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        mean_faster = rating_data[rating_data['delivery_status'] == 'Lebih Cepat']['mean_rating'].values[0]
+        mean_faster = delivery_stats[delivery_stats['delivery_status'] == 'Lebih Cepat']['mean_rating'].values[0]
         st.metric("🚀 Lebih Cepat", f"{mean_faster:.2f}")
     with col2:
-        mean_ontime = rating_data[rating_data['delivery_status'] == 'Tepat Waktu']['mean_rating'].values[0]
+        mean_ontime = delivery_stats[delivery_stats['delivery_status'] == 'Tepat Waktu']['mean_rating'].values[0]
         st.metric("✅ Tepat Waktu", f"{mean_ontime:.2f}")
     with col3:
-        mean_late = rating_data[rating_data['delivery_status'] == 'Terlambat']['mean_rating'].values[0]
-        st.metric("⚠️ Terlambat", f"{mean_late:.2f}", delta=f"{mean_late - mean_faster:+.2f}", delta_color="inverse")
+        mean_late = delivery_stats[delivery_stats['delivery_status'] == 'Terlambat']['mean_rating'].values[0]
+        st.metric("⚠️ Terlambat", f"{mean_late:.2f}")
     
+    st.markdown('<div class="success-box">', unsafe_allow_html=True)
+    st.markdown("### ✅ Kesimpulan Pertanyaan 1")
     st.markdown(f"""
-    <div class="success-box">
-        <div class="insight-title">✅ Kesimpulan Pertanyaan 1</div>
-        <ul>
-            <li>Terdapat <b>hubungan yang signifikan</b> antara waktu pengiriman dan tingkat kepuasan pelanggan</li>
-            <li>Pengiriman <b>Lebih Cepat</b> memiliki rata-rata rating tertinggi (<b>{mean_faster:.2f}/5</b>)</li>
-            <li>Pengiriman <b>Terlambat</b> memiliki rata-rata rating terendah (<b>{mean_late:.2f}/5</b>)</li>
-            <li><b>Penurunan rating sebesar {mean_faster - mean_late:.2f} poin</b> akibat keterlambatan</li>
-            <li>Perbedaan <b>signifikan secara statistik</b> (p-value &lt; 0.05)</li>
-            <li><b>Semakin lama keterlambatan, semakin rendah rating</b> yang diberikan pelanggan</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    Terdapat **hubungan yang signifikan** antara waktu pengiriman dan tingkat kepuasan pelanggan.
+    
+    - Pengiriman yang **lebih cepat** dari estimasi memiliki rata-rata rating kepuasan tertinggi (**{mean_faster:.2f}/5**)
+    - Pengiriman yang **terlambat** hanya memperoleh rating **{mean_late:.2f}/5**
+    - **Penurunan rating sebesar {mean_faster - mean_late:.2f} poin** akibat keterlambatan
+    - Perbedaan ini **signifikan secara statistik** (p-value < 0.05)
+    - **Semakin lama keterlambatan, semakin rendah rating** yang diberikan pelanggan
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Kesimpulan Pertanyaan 2
     st.markdown("## 📍 Pertanyaan 2: Hubungan Lokasi Seller dengan Volume Penjualan")
     
-    total_sales_sp = state_data[state_data['seller_state'] == 'SP']['total_products'].values[0]
-    total_sales_all = state_data['total_products'].sum()
+    top_city = city_data_clean.iloc[0]
+    productive_cities = city_data_clean[city_data_clean['total_sellers'] >= 3].nlargest(1, 'avg_products_per_seller')
+    state_data = results['state_performance']
+    
+    total_sales_sp = state_data[state_data['seller_state'] == 'SP']['total_products_sold'].values[0]
+    total_sales_all = state_data['total_products_sold'].sum()
     sp_pct = (total_sales_sp / total_sales_all * 100)
+    total_sellers_sp = state_data[state_data['seller_state'] == 'SP']['total_sellers'].values[0]
+    total_sellers_all = state_data['total_sellers'].sum()
+    sp_seller_pct = (total_sellers_sp / total_sellers_all * 100)
     
-    top_city = city_data.loc[city_data['total_products_sold'].idxmax()]
-    top_prod = city_data[city_data['total_sellers'] >= 3].nlargest(1, 'productivity')
-    
+    st.markdown('<div class="success-box">', unsafe_allow_html=True)
+    st.markdown("### ✅ Kesimpulan Pertanyaan 2")
     st.markdown(f"""
-    <div class="success-box">
-        <div class="insight-title">✅ Kesimpulan Pertanyaan 2</div>
-        <ul>
-            <li><b>Ada hubungan yang jelas dan sangat kuat</b> antara lokasi geografis seller dengan volume penjualan</li>
-            <li><b>Korelasi positif SANGAT KUAT</b> (r = {correlation:.3f})</li>
-            <li><b>SP (São Paulo)</b> mendominasi penjualan dengan <b>{sp_pct:.1f}%</b> dari total penjualan nasional</li>
-            <li><b>Kota {top_city['seller_city']}</b> menjadi kota terlaris dengan <b>{top_city['total_products_sold']:,} produk</b> dari <b>{top_city['total_sellers']:,} seller</b></li>
-            <li><b>Ketimpangan geografis</b> sangat signifikan (~75% seller di SP)</li>
-            <li>Kota kecil dengan seller efisien (seperti <b>{top_prod.iloc[0]['seller_city']}</b>) juga bisa sangat produktif</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    **Ya, ada hubungan yang jelas dan sangat kuat antara lokasi geografis seller dan jumlah produk yang terjual.**
+    
+    - **SP (São Paulo)** mendominasi penjualan dengan **{sp_pct:.1f}%** dari total penjualan nasional
+    - **Kota {top_city['seller_city'].title()}** menjadi kota terlaris dengan **{top_city['total_products_sold']:,} produk** dari **{top_city['total_sellers']:,} seller**
+    - **{productive_cities.iloc[0]['seller_city'].title()}** memiliki produktivitas tertinggi: **{productive_cities.iloc[0]['avg_products_per_seller']:.0f} produk/seller**
+    - **Korelasi sangat kuat** (r = {results['correlation']['pearson_r']:.3f}) antara jumlah seller dan total penjualan
+    - **Ketimpangan geografis** sangat signifikan: ~{sp_seller_pct:.1f}% seller berada di wilayah SP
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -991,126 +908,63 @@ elif analysis_type == "📈 Kesimpulan & Rekomendasi":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"""
-        <div style="background-color: {BACKGROUND_GRAY}; padding: 20px; border-radius: 10px; height: 100%;">
-            <h3 style="color: {PRIMARY_COLOR};">🚚 Rekomendasi Waktu Pengiriman</h3>
-            <ul>
-                <li><b>Batasi keterlambatan maksimal 3 hari</b>
-                    <ul><li>Terapkan kebijakan toleransi keterlambatan maksimal 3 hari</li>
-                    <li>Berikan kompensasi (voucher/diskon) jika lebih dari 3 hari</li></ul>
-                </li>
-                <li><b>Prioritaskan pengiriman "Lebih Cepat"</b>
-                    <ul><li>Tingkatkan volume pengiriman lebih cepat dari estimasi</li>
-                    <li>Rating lebih cepat (4.22) lebih tinggi dari terlambat (4.09)</li></ul>
-                </li>
-                <li><b>Evaluasi mitra logistik</b>
-                    <ul><li>Hentikan kerjasama dengan kurir yang sering terlambat >7 hari</li>
-                    <li>Ganti dengan kurir yang memiliki on-time delivery rate tinggi</li></ul>
-                </li>
-                <li><b>Implementasi real-time tracking</b>
-                    <ul><li>Berikan notifikasi otomatis jika terjadi keterlambatan</li>
-                    <li>Kurangi ketidakpastian dan keluhan pelanggan</li></ul>
-                </li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 🚚 **Rekomendasi Pengiriman**")
+        st.markdown("""
+        1. **Batasi keterlambatan maksimal 3 hari**
+           - Terapkan kebijakan toleransi keterlambatan maksimal 3 hari
+           - Berikan kompensasi (voucher/diskon) jika lebih dari 3 hari
+        
+        2. **Prioritaskan pengiriman 'Lebih Cepat'**
+           - Tingkatkan volume pengiriman lebih cepat dari estimasi
+           - Rating lebih cepat (4.22) lebih tinggi dari terlambat (4.09)
+        
+        3. **Evaluasi mitra logistik**
+           - Hentikan kerjasama dengan kurir yang sering terlambat (>7 hari)
+           - Ganti dengan kurir yang memiliki on-time delivery rate tinggi
+        
+        4. **Implementasi real-time tracking**
+           - Berikan notifikasi otomatis ke customer jika terjadi keterlambatan
+           - Kurangi ketidakpastian dan keluhan pelanggan
+        """)
     
     with col2:
+        st.markdown("### 📍 **Rekomendasi Ekspansi Seller**")
         st.markdown(f"""
-        <div style="background-color: {BACKGROUND_GRAY}; padding: 20px; border-radius: 10px; height: 100%;">
-            <h3 style="color: {PRIMARY_COLOR};">📍 Rekomendasi Lokasi Geografis</h3>
-            <ul>
-                <li><b>Ekspansi rekrutmen seller ke luar SP</b>
-                    <ul><li>Target prioritas: PR, RJ, MG (kontribusi saat ini kurang dari 10%)</li>
-                    <li>Target tambah 20% seller baru di wilayah tersebut dalam 6 bulan</li></ul>
-                </li>
-                <li><b>Jadikan {top_prod.iloc[0]['seller_city']} sebagai model</b>
-                    <ul><li>Produktivitas tertinggi: {top_prod.iloc[0]['productivity']:.1f} produk/seller</li>
-                    <li>Pelajari dan terapkan strategi seller di kota produktif ini ke wilayah lain</li></ul>
-                </li>
-                <li><b>Bangun hub logistik di Curitiba (PR)</b>
-                    <ul><li>Akses ke wilayah Selatan yang selama ini belum optimal</li>
-                    <li>Potensi meningkatkan penjualan 15-20%</li></ul>
-                </li>
-                <li><b>Berikan insentif produktivitas</b>
-                    <ul><li>Bonus untuk seller dengan produktivitas > 150 produk/seller</li>
-                    <li>Program pelatihan untuk seller dengan produktivitas rendah</li></ul>
-                </li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        1. **Ekspansi rekrutmen seller ke luar SP**
+           - Target prioritas: PR, RJ, MG (kontribusi saat ini <10%)
+           - Target: Tambah 20% seller baru di wilayah tersebut dalam 6 bulan
+        
+        2. **Jadikan {productive_cities.iloc[0]['seller_city'].title()} sebagai model**
+           - Produktivitas tertinggi: {productive_cities.iloc[0]['avg_products_per_seller']:.0f} produk/seller
+           - Pelajari dan terapkan strategi seller di kota produktif ini
+        
+        3. **Bangun hub logistik di Curitiba (PR)**
+           - Akses ke wilayah Selatan yang selama ini belum optimal
+           - Potensi meningkatkan penjualan 15-20%
+        
+        4. **Berikan insentif produktivitas**
+           - Bonus untuk seller dengan produktivitas > 150 produk/seller
+           - Program pelatihan untuk seller dengan produktivitas rendah
+        """)
     
-    # Metode Analisis
     st.markdown("---")
-    st.markdown("## 🔬 Metode Analisis yang Digunakan")
-    
-    st.markdown(f"""
-    <div style="background-color: {BACKGROUND_GRAY}; padding: 20px; border-radius: 10px;">
-        <h4 style="color: {PRIMARY_COLOR};">📊 T-Test (Uji-t)</h4>
-        <p>Digunakan untuk menguji perbedaan rata-rata kepuasan pelanggan antar kelompok pengiriman (Lebih Cepat vs Terlambat).</p>
-        
-        <h4 style="color: {PRIMARY_COLOR};">📈 Korelasi Pearson</h4>
-        <p>Digunakan untuk mengukur hubungan antara jumlah seller dan total penjualan (r = {correlation:.3f}, korelasi positif SANGAT KUAT).</p>
-        
-        <h4 style="color: {PRIMARY_COLOR};">📉 Korelasi Spearman</h4>
-        <p>Digunakan sebagai validasi tambahan untuk hubungan non-linear (r = {spearman_corr:.4f}).</p>
-        
-        <h4 style="color: {PRIMARY_COLOR};">🎯 ANOVA</h4>
-        <p>Digunakan untuk membandingkan rata-rata rating dari tiga kelompok pengiriman sekaligus.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Action Items
-    st.markdown("---")
-    st.markdown("### 🎯 Action Items Prioritas")
-    
-    priority_col1, priority_col2, priority_col3 = st.columns(3)
-    
-    with priority_col1:
-        st.markdown(f"""
-        <div style="background-color: {WARNING_COLOR}20; padding: 15px; border-radius: 10px;">
-            <h4 style="color: {WARNING_COLOR};">🔴 High Priority (Segera)</h4>
-            <ul>
-                <li>Perbaiki SLA pengiriman</li>
-                <li>Monitor keterlambatan real-time</li>
-                <li>Ekspansi seller ke luar SP</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with priority_col2:
-        st.markdown(f"""
-        <div style="background-color: {PRIMARY_COLOR}20; padding: 15px; border-radius: 10px;">
-            <h4 style="color: {PRIMARY_COLOR};">🟡 Medium Priority (1-3 bulan)</h4>
-            <ul>
-                <li>Dashboard monitoring performa</li>
-                <li>Pelatihan seller produktif</li>
-                <li>Partnership logistik baru</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with priority_col3:
-        st.markdown(f"""
-        <div style="background-color: {SUCCESS_COLOR}20; padding: 15px; border-radius: 10px;">
-            <h4 style="color: {SUCCESS_COLOR};">🟢 Low Priority (3-6 bulan)</h4>
-            <ul>
-                <li>Infrastruktur gudang baru</li>
-                <li>Aplikasi seller mobile</li>
-                <li>Ekspansi internasional</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("### 📊 Metode Analisis yang Digunakan")
+    st.markdown("""
+    - **T-Test:** Menguji perbedaan rata-rata kepuasan pelanggan antar kelompok pengiriman
+    - **Korelasi Pearson:** Mengukur hubungan antara jumlah seller dan total penjualan
+    - **ANOVA:** Menguji perbedaan rating antar tiga kelompok status pengiriman
+    - Kedua metode dipilih karena sesuai dengan jenis data numerik dan tujuan analisis
+    """)
 
 # ============================================
-# FOOTER
+# 13. FOOTER
 # ============================================
+
 st.markdown("---")
 st.markdown(f"""
 <footer>
     Dashboard Analisis Data E-Commerce Brazil | Periode 2016-2018<br>
-    Data Source: Olist Brazilian E-Commerce Dataset | Filter: {start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}<br>
-    Analisis: Pengiriman vs Kepuasan Pelanggan | Lokasi Seller vs Volume Penjualan<br>
-    Warna Utama: {PRIMARY_COLOR} | © 2024
+    Data Source: Olist Brazilian E-Commerce Dataset | Analisis oleh: Firdhania Nur Rizky Setyarini<br>
+    Tujuan Analisis: Pengaruh Waktu Pengiriman | Hubungan Lokasi Seller dengan Penjualan
 </footer>
 """, unsafe_allow_html=True)
