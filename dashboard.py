@@ -171,15 +171,15 @@ def load_data():
     """Memuat dataset yang sudah dibersihkan"""
     
     # Load datasets
-    customers_df = pd.read_csv('data\customers_df.csv')
-    geolocation_df = pd.read_csv('data\geolocation_df.csv')
-    order_items_df = pd.read_csv('data\order_items_df.csv')
-    order_payments_df = pd.read_csv('data\order_payments_df.csv')
-    order_reviews_df = pd.read_csv('data\order_reviews_df.csv')
-    orders_df = pd.read_csv('data\orders_df.csv')
-    product_category_df = pd.read_csv('data\product_category_df.csv')
-    products_df = pd.read_csv('data\products_df.csv')
-    sellers_df = pd.read_csv('data\sellers_df.csv')
+    customers_df = pd.read_csv('data/customers_df.csv')
+    geolocation_df = pd.read_csv('data/geolocation_df.csv')
+    order_items_df = pd.read_csv('data/order_items_df.csv')
+    order_payments_df = pd.read_csv('data/order_payments_df.csv')
+    order_reviews_df = pd.read_csv('data/order_reviews_df.csv')
+    orders_df = pd.read_csv('data/orders_df.csv')
+    product_category_df = pd.read_csv('data/product_category_df.csv')
+    products_df = pd.read_csv('data/products_df.csv')
+    sellers_df = pd.read_csv('data/sellers_df.csv')
     
     # Konversi tipe data datetime
     datetime_cols = ['order_purchase_timestamp', 'order_approved_at', 
