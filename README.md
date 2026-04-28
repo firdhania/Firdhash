@@ -89,3 +89,19 @@ streamlit run dashboard.py
 atau
 python -m streamlit run dashboard.py
 Aplikasi akan secara otomatis terbuka di browser default Anda.
+
+
+## 🛠️ Persyaratan Sistem
+- Python 3.8 atau lebih baru
+- Pip (Python package manager)
+- Minimal RAM 4GB (disarankan 8GB untuk performa optimal)
+- Koneksi internet (untuk pertama kali install library)
+
+## 📦 Daftar Library yang Diperlukan
+Buat file `requirements.txt` dengan isi berikut:
+streamlit
+pandas
+numpy
+matplotlib
+seaborn
+scipy
