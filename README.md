@@ -90,7 +90,7 @@ Instal semua dependensi yang dibutuhkan menggunakan pip:
 pip install -r requirements.txt
 
 ## 4. Menjalankan Dashboard
-Jalankan perintah berikut pada terminal di dalam direktori proyek:
+Jalankan perintah berikut pada terminal:
 streamlit run dashboard.py
 atau
 python -m streamlit run dashboard.py
