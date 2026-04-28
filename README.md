@@ -79,15 +79,15 @@ FUNDAMENTAL ANALISIS DATA
 Langkah pertama, unduh proyek ini ke komputer lokal Anda menggunakan perintah berikut:
 git clone https://github.com/firdhania/Firdhash.git
 
-## 2. Instalasi Library
-Instal semua dependensi yang dibutuhkan menggunakan pip:
-pip install -r requirements.txt
-
-## 3. Mengaktifkan Virtual Environment
+## 2. Mengaktifkan Virtual Environment
 Sebelum menjalankan dashboard, harus dipastikan bahwa virtual enviroment sudah aktif dengan:
 python -m venv venv
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 .\venv\Scripts\Activate.ps1
+
+## 3. Instalasi Library
+Instal semua dependensi yang dibutuhkan menggunakan pip:
+pip install -r requirements.txt
 
 ## 4. Menjalankan Dashboard
 Jalankan perintah berikut pada terminal di dalam direktori proyek:
