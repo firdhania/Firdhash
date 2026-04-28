@@ -52,15 +52,15 @@ Akses dashboard online di: [(https://firdhash-dashbo.streamlit.app/)]
 ## 📁 Struktur Proyek
 FUNDAMENTAL ANALISIS DATA
 └── data/
-|   ├── customers_df.csv
-|   ├── geolocation_df.csv
-|   ├── order_items_df.csv
-|   ├── order_payments_df.csv
-|   ├── order_reviews_df.csv
-|   ├── orders_df.csv
-|   ├── product_category_df.csv
-|   ├── products_df.csv
-|   └── sellers_df.csv
+|   ├── customers.csv
+|   ├── geolocation.csv
+|   ├── order_items.csv
+|   ├── order_payments.csv
+|   ├── order_reviews.csv
+|   ├── orders.csv
+|   ├── product_category.csv
+|   ├── products.csv
+|   └── sellers.csv
 └── venv
 |   ├── etc
 |   ├── Include
@@ -83,7 +83,13 @@ git clone https://github.com/firdhania/Firdhash.git
 Instal semua dependensi yang dibutuhkan menggunakan pip:
 pip install -r requirements.txt
 
-## 3. Menjalankan Dashboard
+## 3. Mengaktifkan Virtual Environment
+Sebelum menjalankan dashboard, harus dipastikan bahwa virtual enviroment sudah aktif dengan:
+python -m venv venv
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\venv\Scripts\Activate.ps1
+
+## 4. Menjalankan Dashboard
 Jalankan perintah berikut pada terminal di dalam direktori proyek:
 streamlit run dashboard.py
 atau
